@@ -1,18 +1,17 @@
 package ar.edu.itba.ss.pedestriandynamics;
 
 import ar.edu.itba.ss.pedestriandynamics.models.Human;
+import ar.edu.itba.ss.pedestriandynamics.models.ObstacleCoefficients;
 import ar.edu.itba.ss.pedestriandynamics.models.Pedestrian;
 import ar.edu.itba.ss.pedestriandynamics.models.Zombie;
+import ar.edu.itba.ss.pedestriandynamics.utils.Constants;
 import ar.edu.itba.ss.pedestriandynamics.utils.Vector2D;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Simulation {
 
-    private final double ZOMBIE_SCAN_RADIUS = 4;
+    private final static double ZOMBIE_SCAN_RADIUS = 4;
     private final double roomRadius;
     private final List<Human> humans;
     private final List<Zombie> zombies;
@@ -44,7 +43,7 @@ public class Simulation {
         Random random = new Random();
 
         while (humans.size() < popSize) {
-            Vector2D humanPos = Vector2D.randomFromPolar(2 * minPedestrianRadius + initialDistanceToZombie, roomRadius - minPedestrianRadius, 0, 2 * Math.PI, random)
+            Vector2D humanPos = Vector2D.randomFromPolar(2 * minPedestrianRadius + initialDistanceToZombie, roomRadius - minPedestrianRadius, 0, 2 * Math.PI, random);
             Human newHuman = new Human(humanPos.x(), humanPos.y(), humanDesiredSpeed, minPedestrianRadius, maxPedestrianRadius, beta, tau);
 
             boolean overlaps = humans.stream().anyMatch(human -> human.overlaps(newHuman));
@@ -64,20 +63,48 @@ public class Simulation {
 
         for (int i = 0; i < steps; i++) {
 
+            // analyze infections & collisions
+            for (Human human : humans) {
+                for (Human anotherHuman : humans) {
+                    if (human.equals(anotherHuman)) continue;
+
+                    if (human.overlaps(anotherHuman)) {
+                        anotherHuman.setNextRadius(human.getMinRadius());
+                    }
+                }
+
+                Vector2D nearestWall = computeNearestWallPosition(human.getCurrentPosition());
+
+                if (human.distance(nearestWall, 0) < Constants.EPSILON) {
+                    human.setNextRadius(human.getMinRadius());
+                }
+
+                for (Zombie zombie : zombies) {
+
+                }
+            }
+
             // calculate next state for every zombie
             for (Zombie zombie : zombies) {
-                Human nextZombieTarget = getNextZombieTarget(zombie, ZOMBIE_SCAN_RADIUS);
+                Human nextZombieTarget = getNextZombieTarget(zombie);
                 Vector2D nextTargetDirection;
                 double nextZombieSpeed;
 
-                // TODO: add case for collision
                 if (nextZombieTarget == null) {
-                    nextTargetDirection = Vector2D.randomFromPolar(0, roomRadius - zombie.getMaxRadius(),
-                            0, 2 * Math.PI, random);
                     nextZombieSpeed = zombie.getInactiveSpeed();
+
+                    if (zombie.isWandering()) {
+                        nextTargetDirection = zombie.getWanderTarget();
+                    } else {
+                        nextTargetDirection = Vector2D.randomFromPolar(0, roomRadius - zombie.getMaxRadius(),
+                                0, 2 * Math.PI, random);
+                        zombie.setWanderTarget(nextTargetDirection);
+                    }
+
                 } else {
                     nextTargetDirection = nextZombieTarget.getCurrentPosition();
                     nextZombieSpeed = zombie.getDesiredSpeed();
+                    zombie.setWanderTarget(null);
                 }
 
                 Vector2D nextVelocity = nextTargetDirection.scale(1 / nextTargetDirection.length()).scale(nextZombieSpeed);
@@ -86,29 +113,74 @@ public class Simulation {
 
             // calculate next state for every human
             for (Human human : humans) {
-                // heuristic like measure distances from the 5 nearest objects
+                Vector2D eludeDirection = new Vector2D(0, 0);
+
+                // add zombies
+                zombies.forEach(zombie -> {
+                    eludeDirection.add(computeEscapeDirectionTerm(
+                            ObstacleCoefficients.ZOMBIE,
+                            human.getCurrentPosition(),
+                            zombie.getCurrentPosition()));
+                });
+
+                // add nearest wall
+                eludeDirection.add(computeEscapeDirectionTerm(
+                        ObstacleCoefficients.WALL,
+                        human.getCurrentPosition(),
+                        computeNearestWallPosition(human.getCurrentPosition()))
+                );
+
+                // add nearest 5 humans
+
+                humans.forEach(h -> {
+                    if (h == human) return;
+
+                    eludeDirection.add(computeEscapeDirectionTerm(
+                            ObstacleCoefficients.HUMAN,
+                            human.getCurrentPosition(),
+                            h.getCurrentPosition()));
+                });
+
+                human.setNextVelocity(eludeDirection.normalize().scale(human.getDesiredSpeed()));
             }
 
             // update pedestrians
-            // move()
-            // analizar infecciones
-
+            updatePedestrianPositions(stepSize);
         }
     }
 
-    private Human getNextZombieTarget(Zombie zombie, double scanRadius) {
+    private Vector2D computeEscapeDirectionTerm(ObstacleCoefficients coefficients, Vector2D ownPosition, Vector2D obstaclePosition) {
+        Vector2D direction = ownPosition.subtract(obstaclePosition);
+        double dij = direction.length();
+        Vector2D eij = direction.normalize();
+
+        return eij.scale(coefficients.Ap * Math.exp(-dij / coefficients.Bp));
+    }
+
+    private Vector2D computeNearestWallPosition(Vector2D ownPosition) {
+        double angle = ownPosition.xAxisAngle();
+
+        return new Vector2D(roomRadius * Math.cos(angle), roomRadius * Math.sin(angle));
+    }
+
+    private Human getNextZombieTarget(Zombie zombie) {
         Human target = null;
         double minDistance = Double.POSITIVE_INFINITY;
 
         for (Human human : humans) {
             double distance = zombie.distance(human);
 
-            if (distance < scanRadius && distance < minDistance) {
+            if (distance < ZOMBIE_SCAN_RADIUS && distance < minDistance) {
                 target = human;
                 minDistance = distance;
             }
         }
 
         return target;
+    }
+
+    private void updatePedestrianPositions(double stepSize) {
+        humans.forEach(h -> h.move(stepSize));
+        zombies.forEach(z -> z.move(stepSize));
     }
 }

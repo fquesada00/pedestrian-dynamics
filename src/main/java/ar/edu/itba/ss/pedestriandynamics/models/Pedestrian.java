@@ -4,13 +4,12 @@ import ar.edu.itba.ss.pedestriandynamics.utils.Vector2D;
 
 public abstract class Pedestrian {
 
-    private Vector2D currentPosition;
-    private Vector2D currentVelocity;
-    private Vector2D nextPosition;
+    protected Vector2D currentPosition;
     private Vector2D nextVelocity;
     private final double desiredSpeed;
     private final double maxRadius;
     private final double minRadius;
+    private double nextRadius;
     private double currentRadius;
     private final double beta;
     private final double tau;
@@ -24,8 +23,8 @@ public abstract class Pedestrian {
         this.currentPosition = new Vector2D(initialX, initialY);
     }
 
-    public void move() {
-        this.currentPosition = this.nextPosition;
+    public void move(double stepSize) {
+        this.currentPosition = this.currentPosition.add(this.nextVelocity.scale(stepSize));
     }
 
     public void contract() {
@@ -60,8 +59,12 @@ public abstract class Pedestrian {
         return this.maxRadius;
     }
 
-    public void setNextPosition(Vector2D nextPosition) {
-        this.nextPosition = nextPosition;
+    public double getMinRadius() {
+        return this.minRadius;
+    }
+
+    public void setNextRadius(double radius) {
+        this.nextRadius = radius;
     }
 
     public void setNextVelocity(Vector2D nextVelocity) {

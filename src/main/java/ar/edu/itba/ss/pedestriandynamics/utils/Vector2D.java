@@ -27,12 +27,20 @@ public record Vector2D(double x, double y) {
         return this.subtract(other).length();
     }
 
+    public Vector2D normalize() {
+        return this.scale(1.0 / this.length());
+    }
+
     public double angle(Vector2D other) {
         double angle = Math.acos(this.dot(other) / (this.length() * other.length()));
         if (this.x * other.y - this.y * other.x < 0) {
             angle = -angle;
         }
         return angle;
+    }
+
+    public double xAxisAngle() {
+        return Math.atan2(this.y, this.x);
     }
 
     public static Vector2D randomFromPolar(double lowerRadius, double upperRadius, double lowerAngle, double upperAngle, Random random) {
@@ -43,5 +51,9 @@ public record Vector2D(double x, double y) {
         double y = radius * Math.sin(angle);
 
         return new Vector2D(x, y);
+    }
+
+    public boolean isEqualVector(Vector2D other, double epsilon) {
+        return Math.abs(this.x - other.x) < epsilon && Math.abs(this.y - other.y) < epsilon;
     }
 }
