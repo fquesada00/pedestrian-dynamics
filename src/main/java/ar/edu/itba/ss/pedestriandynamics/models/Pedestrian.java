@@ -21,6 +21,7 @@ public abstract class Pedestrian {
         this.desiredSpeed = desiredSpeed;
         this.minRadius = minRadius;
         this.maxRadius = maxRadius;
+        this.currentRadius = maxRadius;
         this.beta = beta;
         this.tau = tau;
         this.currentPosition = new Vector2D(initialX, initialY);
@@ -53,6 +54,10 @@ public abstract class Pedestrian {
 
     public double getDesiredSpeed() {
         return this.desiredSpeed;
+    }
+
+    public Vector2D getNextVelocity() {
+        return nextVelocity;
     }
 
     public double getCurrentRadius() {
