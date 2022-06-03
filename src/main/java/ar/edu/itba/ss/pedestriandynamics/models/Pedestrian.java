@@ -56,6 +56,10 @@ public abstract class Pedestrian {
         return this.desiredSpeed;
     }
 
+    public Vector2D getNextVelocity() {
+        return nextVelocity;
+    }
+
     public double getCurrentRadius() {
         return this.currentRadius;
     }
