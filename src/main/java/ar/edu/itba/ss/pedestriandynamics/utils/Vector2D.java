@@ -3,6 +3,16 @@ package ar.edu.itba.ss.pedestriandynamics.utils;
 import java.util.Random;
 
 public record Vector2D(double x, double y) {
+    public static Vector2D randomFromPolar(double lowerRadius, double upperRadius, double lowerAngle, double upperAngle, Random random) {
+        double angle = random.nextDouble(lowerAngle, upperAngle);
+        double radius = random.nextDouble(lowerRadius, upperRadius);
+
+        double x = radius * Math.cos(angle);
+        double y = radius * Math.sin(angle);
+
+        return new Vector2D(x, y);
+    }
+
     public Vector2D add(Vector2D other) {
         return new Vector2D(x + other.x, y + other.y);
     }
@@ -28,6 +38,10 @@ public record Vector2D(double x, double y) {
     }
 
     public Vector2D normalize() {
+        if (this.length() == 0) {
+            return this;
+        }
+
         return this.scale(1.0 / this.length());
     }
 
@@ -43,17 +57,8 @@ public record Vector2D(double x, double y) {
         return Math.atan2(this.y, this.x);
     }
 
-    public static Vector2D randomFromPolar(double lowerRadius, double upperRadius, double lowerAngle, double upperAngle, Random random) {
-        double angle = random.nextDouble(lowerAngle, upperAngle);
-        double radius = random.nextDouble(lowerRadius, upperRadius);
-
-        double x = radius * Math.cos(angle);
-        double y = radius * Math.sin(angle);
-
-        return new Vector2D(x, y);
-    }
-
     public boolean isEqualVector(Vector2D other, double epsilon) {
-        return Math.abs(this.x - other.x) < epsilon && Math.abs(this.y - other.y) < epsilon;
+
+        return other != null && Math.abs(this.x - other.x) < epsilon && Math.abs(this.y - other.y) < epsilon;
     }
 }

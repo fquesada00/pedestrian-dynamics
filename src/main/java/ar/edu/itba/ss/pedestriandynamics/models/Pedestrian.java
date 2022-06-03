@@ -1,18 +1,21 @@
 package ar.edu.itba.ss.pedestriandynamics.models;
 
+import ar.edu.itba.ss.pedestriandynamics.utils.Constants;
 import ar.edu.itba.ss.pedestriandynamics.utils.Vector2D;
 
 public abstract class Pedestrian {
 
+    protected final double desiredSpeed;
+    protected final double maxRadius;
+    protected final double minRadius;
+    protected final double beta;
+    protected final double tau;
     protected Vector2D currentPosition;
-    private Vector2D nextVelocity;
-    private final double desiredSpeed;
-    private final double maxRadius;
-    private final double minRadius;
-    private double nextRadius;
-    private double currentRadius;
-    private final double beta;
-    private final double tau;
+    protected Vector2D nextVelocity;
+    protected double nextRadius;
+    protected double currentRadius;
+    protected boolean isInfecting;
+    protected double remainingInfectionTime;
 
     public Pedestrian(double initialX, double initialY, double desiredSpeed, double minRadius, double maxRadius, double beta, double tau) {
         this.desiredSpeed = desiredSpeed;
@@ -21,6 +24,7 @@ public abstract class Pedestrian {
         this.beta = beta;
         this.tau = tau;
         this.currentPosition = new Vector2D(initialX, initialY);
+        this.isInfecting = false;
     }
 
     public void move(double stepSize) {
@@ -69,5 +73,50 @@ public abstract class Pedestrian {
 
     public void setNextVelocity(Vector2D nextVelocity) {
         this.nextVelocity = nextVelocity;
+    }
+
+    public double computeNextRadius(double stepSize) {
+        if (currentRadius < maxRadius)
+            return currentRadius + maxRadius * stepSize / tau;
+
+        return maxRadius;
+    }
+
+    public double computeNextSpeed() {
+        return desiredSpeed * (Math.pow((nextRadius - minRadius) / (maxRadius - minRadius), beta));
+    }
+
+    public boolean isInfecting() {
+        return this.isInfecting;
+    }
+
+    public void setInfecting(boolean isInfecting) {
+        this.isInfecting = true;
+    }
+
+    public void startInfection() {
+        this.isInfecting = true;
+        this.remainingInfectionTime = Constants.INFECTION_TIME;
+        this.nextVelocity = new Vector2D(0, 0);
+    }
+
+    public double getRemainingInfectionTime() {
+        return this.remainingInfectionTime;
+    }
+
+    public void decreaseRemainingInfectionTime(double time) {
+        this.remainingInfectionTime -= time;
+    }
+
+    public double getBeta() {
+        return beta;
+    }
+
+    public double getTau() {
+        return tau;
+    }
+
+    public void updateRadius() {
+        this.currentRadius = this.nextRadius;
     }
 }
