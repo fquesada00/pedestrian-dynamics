@@ -63,7 +63,8 @@ public class Simulation {
                 11, 300, 0.1, 0.37, 4, 3, 0.3, 0.9, 0.5, 1
         );
 
-        double stepSize = simulation.computeOptimalStepSize(minRadius, humanDesiredSpeed, zombieDesiredSpeed);
+//        double stepSize = simulation.computeOptimalStepSize(minRadius, humanDesiredSpeed, zombieDesiredSpeed);
+        double stepSize = 0.01;
 
         simulation.simulate(200, stepSize);
     }
@@ -88,12 +89,20 @@ public class Simulation {
         return humans;
     }
 
-    public double computeOptimalStepSize(double minRadius, double humanDesiredSpeed, double zombieDesiredSpeed) {
+    private double computeOptimalStepSize(double minRadius, double humanDesiredSpeed, double zombieDesiredSpeed) {
         return 0.5 * minRadius / Math.max(humanDesiredSpeed, zombieDesiredSpeed);
+    }
+
+    private void clearOutputFile() throws IOException {
+        FileWriter fw = new FileWriter(OUTPUT_FILE_NAME);
+        fw.write("");
+        fw.close();
     }
 
     public void simulate(double duration, double stepSize) throws IOException {
         int steps = (int) Math.floor(duration / stepSize);
+        // clear file
+        clearOutputFile();
 
         for (int i = 0; i < steps && humans.size() > 0; i++) {
             printSimulationStep(i, OUTPUT_FILE_NAME);
@@ -101,10 +110,10 @@ public class Simulation {
             List<Zombie> newZombies = humans.stream().filter(Human::transitionToZombie).map(Zombie::fromHuman).collect(Collectors.toList());
             zombies.addAll(newZombies);
             zombies.forEach(zombie -> {
-                if (zombie.isDoneInfecting()){
+                if (zombie.isDoneInfecting()) {
                     zombie.finishInfection();
                 }
-            } );
+            });
             humans.removeIf(Human::transitionToZombie);
 
             // analyze infections & collisions for humans & elude
@@ -119,6 +128,7 @@ public class Simulation {
             // analyze collisions for zombies
             // updates zombies velocities and radii
             processZombiesCollisions(stepSize);
+
 
             // update pedestrians
             // updates humans positions and radius
