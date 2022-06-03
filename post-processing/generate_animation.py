@@ -6,7 +6,7 @@ def generate_room():
         for index, line in enumerate(f):
             if index == 0:
                 room_radius = float(line.split()[0])
-
+    
     with open("room.xyz", "w") as f:
         particles = 100
         f.write(f"{particles}\ncomment\n")
@@ -38,3 +38,7 @@ def generate_animation():
                     x = float(line.split()[0])
                     y = float(line.split()[1])
                     epidemic_file.write(f"{x} {y}\n")
+
+if __name__ == "__main__":
+    generate_room()
+    # generate_animation()
