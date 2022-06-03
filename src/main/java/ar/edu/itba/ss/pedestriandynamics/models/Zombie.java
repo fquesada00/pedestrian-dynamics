@@ -37,6 +37,15 @@ public class Zombie extends Pedestrian {
         TAU = tau;
     }
 
+    public boolean isDoneInfecting() {
+        return isInfecting && remainingInfectionTime <= 0;
+    }
+
+    public void finishInfection() {
+        this.isInfecting = false;
+        this.remainingInfectionTime = 0;
+    }
+
     public Vector2D getWanderTarget() {
         return wanderTarget;
     }

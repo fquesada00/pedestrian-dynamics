@@ -100,6 +100,11 @@ public class Simulation {
             // convert humans to zombies
             List<Zombie> newZombies = humans.stream().filter(Human::transitionToZombie).map(Zombie::fromHuman).collect(Collectors.toList());
             zombies.addAll(newZombies);
+            zombies.forEach(zombie -> {
+                if (zombie.isDoneInfecting()){
+                    zombie.finishInfection();
+                }
+            } );
             humans.removeIf(Human::transitionToZombie);
 
             // analyze infections & collisions for humans & elude
