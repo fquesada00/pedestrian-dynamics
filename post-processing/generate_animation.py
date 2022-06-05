@@ -1,5 +1,6 @@
 import numpy as np
 from utils.Constants import Constants
+from utils.get_static_parameters import get_static_parameters
 
 
 def generate_room():
@@ -19,14 +20,7 @@ def generate_room():
 
 
 def generate_animation():
-    with open(Constants.STATIC_FILE_NAME, "r") as f:
-        for index, line in enumerate(f):
-            if index == 0:
-                room_radius = float(line.split()[0])
-            elif index == 1:
-                humans = int(line.split()[0])
-            elif index == 2:
-                zombies = int(line.split()[0])
+    room_radius, humans, zombies = get_static_parameters()
 
     with open(Constants.DYNAMIC_FILE_NAME, "r") as dynamic_file:
         with open(Constants.ANIMATION_FILE_NAME, "w") as epidemic_file:
