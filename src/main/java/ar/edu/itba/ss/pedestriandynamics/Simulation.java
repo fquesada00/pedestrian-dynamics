@@ -24,24 +24,23 @@ public class Simulation {
     private final List<Zombie> zombies;
 
     public Simulation(double roomRadius, int totalHumans,
-                      double minPedestrianRadius, double maxPedestrianRadius, double humanDesiredSpeed, double zombieDesiredSpeed, double zombieInactiveSpeed,
-                      double beta, double tau, double initialDistanceToZombie) {
+            double minPedestrianRadius, double maxPedestrianRadius, double humanDesiredSpeed, double zombieDesiredSpeed,
+            double zombieInactiveSpeed,
+            double beta, double tau, double initialDistanceToZombie) {
         Zombie.setParameters(
                 zombieInactiveSpeed,
                 zombieDesiredSpeed,
                 minPedestrianRadius,
                 maxPedestrianRadius,
                 beta,
-                tau
-        );
+                tau);
 
         Human.setParameters(
                 humanDesiredSpeed,
                 minPedestrianRadius,
                 maxPedestrianRadius,
                 beta,
-                tau
-        );
+                tau);
 
         this.roomRadius = roomRadius;
 
@@ -56,28 +55,37 @@ public class Simulation {
     }
 
     public static void main(String[] args) throws IOException {
-        double minRadius = 0.1;
-        double humanDesiredSpeed = 0.37;
-        double zombieDesiredSpeed = 0.37;
+        int defaultNumberOfHumans = 100;
+        int numberOfHumans = Integer.parseInt(System.getProperty("nh", Integer.toString(defaultNumberOfHumans)));
+
+        double defaultZombieDesiredSpeed = 3;
+        double zombieDesiredSpeed = Double.parseDouble(System.getProperty("vdz", Double.toString(defaultZombieDesiredSpeed)));
+
+        double defaultStepSize = 0.01;
+        double stepSize = Double.parseDouble(System.getProperty("stepSize", Double.toString(defaultStepSize)));
+
+        int defaultDuration = 200;
+        int duration = Integer.parseInt(System.getProperty("duration", Integer.toString(defaultDuration)));
 
         Simulation simulation = new Simulation(
-                11, 100, 0.1, 0.37, 4, 3, 0.3, 0.9, 0.5, 1
-        );
+                11, numberOfHumans, 0.1, 0.37, 4, zombieDesiredSpeed, 0.3, 0.9, 0.5, 1);
 
-//        double stepSize = simulation.computeOptimalStepSize(minRadius, humanDesiredSpeed, zombieDesiredSpeed);
-        double stepSize = 0.01;
+        // double stepSize = simulation.computeOptimalStepSize(minRadius,
+        // humanDesiredSpeed, zombieDesiredSpeed);
 
-        simulation.simulate(200, stepSize);
+        simulation.simulate(duration, stepSize);
     }
 
-    private List<Human> generateInitialHumanPopulation(int popSize, double roomRadius, double minPedestrianRadius, double maxPedestrianRadius,
-                                                       double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie) {
+    private List<Human> generateInitialHumanPopulation(int popSize, double roomRadius, double minPedestrianRadius,
+            double maxPedestrianRadius,
+            double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie) {
         List<Human> humans = new ArrayList<>();
 
         Random random = new Random();
 
         while (humans.size() < popSize) {
-            Vector2D humanPos = Vector2D.randomFromPolar(2 * minPedestrianRadius + initialDistanceToZombie, roomRadius - minPedestrianRadius, 0, 2 * Math.PI, random);
+            Vector2D humanPos = Vector2D.randomFromPolar(2 * minPedestrianRadius + initialDistanceToZombie,
+                    roomRadius - minPedestrianRadius, 0, 2 * Math.PI, random);
             Human newHuman = new Human(humanPos.x(), humanPos.y());
 
             boolean overlaps = humans.stream().anyMatch(human -> human.overlaps(newHuman));
@@ -108,7 +116,8 @@ public class Simulation {
         for (int i = 0; i < steps && humans.size() > 0; i++) {
             printSimulationStep(i);
             // convert humans to zombies
-            List<Zombie> newZombies = humans.stream().filter(Human::transitionToZombie).map(Zombie::fromHuman).collect(Collectors.toList());
+            List<Zombie> newZombies = humans.stream().filter(Human::transitionToZombie).map(Zombie::fromHuman)
+                    .collect(Collectors.toList());
             zombies.addAll(newZombies);
             zombies.forEach(zombie -> {
                 if (zombie.isDoneInfecting()) {
@@ -124,12 +133,11 @@ public class Simulation {
 
             // calculate next target for every zombie
             updateZombiesNextTargets();
-//
+            //
             // TODO: Duda: es válido calcular esta velocidad de escape para zombies?
             // analyze collisions for zombies
             // updates zombies velocities and radii
             processZombiesCollisions(stepSize);
-
 
             // update pedestrians
             // updates humans positions and radius
@@ -141,7 +149,6 @@ public class Simulation {
         System.out.println("Humans: " + humans.size());
     }
 
-
     private void processHumansCollisions(double stepSize) {
         for (Human human : humans) {
             if (human.isInfecting()) {
@@ -152,7 +159,8 @@ public class Simulation {
             List<Vector2D> collisionObstacles = new ArrayList<>();
 
             for (Human otherHuman : humans) {
-                if (human.equals(otherHuman)) continue;
+                if (human.equals(otherHuman))
+                    continue;
 
                 if (human.overlaps(otherHuman)) {
                     collisionObstacles.add(otherHuman.getCurrentPosition());
@@ -176,7 +184,6 @@ public class Simulation {
                     zombie.startInfection();
                 }
             }
-
 
             // for collisions
             if (collisionObstacles.size() > 0) {
@@ -209,7 +216,8 @@ public class Simulation {
             }
 
             for (Zombie otherZombie : zombies) {
-                if (zombie.equals(otherZombie)) continue;
+                if (zombie.equals(otherZombie))
+                    continue;
                 // TODO: Duda: Qué pasa si más de un zombie está en contacto con un humano?
                 if (zombie.overlaps(otherZombie)) {
                     collisionObstacles.add(otherZombie.getCurrentPosition());
@@ -219,10 +227,11 @@ public class Simulation {
             // for collisions
             if (collisionObstacles.size() > 0) {
                 zombie.setNextRadius(zombie.getMinRadius());
-//                zombie.setWanderTarget(null);
+                // zombie.setWanderTarget(null);
                 zombie.setNextVelocity(computeEscapeVelocity(zombie, collisionObstacles));
             } else {
-                // TODO: Duda: el radio incrementa con el tiempo como el humano o es instantaneo?
+                // TODO: Duda: el radio incrementa con el tiempo como el humano o es
+                // instantaneo?
                 zombie.setNextRadius(zombie.computeNextRadius(stepSize));
             }
 
@@ -260,7 +269,8 @@ public class Simulation {
             }
 
             //
-            Vector2D nextVelocity = nextTargetDirection.subtract(zombie.getCurrentPosition()).normalize().scale(nextZombieSpeed);
+            Vector2D nextVelocity = nextTargetDirection.subtract(zombie.getCurrentPosition()).normalize()
+                    .scale(nextZombieSpeed);
             zombie.setNextVelocity(nextVelocity);
         }
     }
@@ -269,7 +279,8 @@ public class Simulation {
         List<Zombie> nearbyZombies = new ArrayList<>();
 
         for (Zombie zombie : zombies) {
-            if (pedestrian.equals(zombie)) continue;
+            if (pedestrian.equals(zombie))
+                continue;
 
             if (pedestrian.distance(zombie.getCurrentPosition(), zombie.getCurrentRadius()) < scanRadius) {
                 nearbyZombies.add(zombie);
@@ -282,7 +293,8 @@ public class Simulation {
         List<Human> nearbyHumans = new ArrayList<>();
 
         for (Human human : humans) {
-            if (pedestrian.equals(human)) continue;
+            if (pedestrian.equals(human))
+                continue;
 
             if (pedestrian.distance(human.getCurrentPosition(), human.getCurrentRadius()) < scanRadius) {
                 nearbyHumans.add(human);
@@ -307,13 +319,13 @@ public class Simulation {
         eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                 ObstacleCoefficients.WALL,
                 pedestrian.getCurrentPosition(),
-                computeNearestWallPosition(pedestrian.getCurrentPosition()))
-        );
+                computeNearestWallPosition(pedestrian.getCurrentPosition())));
 
         // add nearest humans
         List<Human> nearbyHumans = getNearbyHumans(humans, pedestrian, HUMAN_SCAN_RADIUS);
         for (Human human : nearbyHumans) {
-            if (human == pedestrian) continue;
+            if (human == pedestrian)
+                continue;
 
             eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                     ObstacleCoefficients.HUMAN,
@@ -324,7 +336,8 @@ public class Simulation {
         return eludeDirection.normalize().scale(pedestrian.computeNextSpeed());
     }
 
-    private Vector2D computeEludeDirectionTerm(ObstacleCoefficients coefficients, Vector2D ownPosition, Vector2D obstaclePosition) {
+    private Vector2D computeEludeDirectionTerm(ObstacleCoefficients coefficients, Vector2D ownPosition,
+            Vector2D obstaclePosition) {
         Vector2D direction = ownPosition.subtract(obstaclePosition);
         double dij = direction.length();
         Vector2D eij = direction.normalize();
@@ -378,14 +391,18 @@ public class Simulation {
     private void printSimulationStep(int stepNumber) throws IOException {
         FileWriter fileWriter = new FileWriter(Simulation.OUTPUT_FILE_NAME, true);
 
-        fileWriter.write(String.format("%d\ncomment\n", humans.size() + zombies.size()));
+        fileWriter.write(String.format("%d\n", stepNumber));
 
         for (Zombie zombie : zombies) {
-//            fileWriter.write(String.format("%f\t%f\t%f\t255\t0\t0\n", zombie.getCurrentPosition().x(), zombie.getCurrentPosition().y(), ZOMBIE_SCAN_RADIUS));
-            fileWriter.write(String.format("%f\t%f\t%f\t0\t255\t0\n", zombie.getCurrentPosition().x(), zombie.getCurrentPosition().y(), zombie.getCurrentRadius()));
+            // fileWriter.write(String.format("%f\t%f\t%f\t255\t0\t0\n",
+            // zombie.getCurrentPosition().x(), zombie.getCurrentPosition().y(),
+            // ZOMBIE_SCAN_RADIUS));
+            fileWriter.write(String.format("%f\t%f\t%f\t%s\n", zombie.getCurrentPosition().x(),
+                    zombie.getCurrentPosition().y(), zombie.getCurrentRadius(), zombie.isInfecting() ? "i" : "z"));
         }
         for (Human human : humans) {
-            fileWriter.write(String.format("%f\t%f\t%f\t255\t0\t0\n", human.getCurrentPosition().x(), human.getCurrentPosition().y(), human.getCurrentRadius()));
+            fileWriter.write(String.format("%f\t%f\t%f\t%s\n", human.getCurrentPosition().x(),
+                    human.getCurrentPosition().y(), human.getCurrentRadius(), human.isInfecting() ? "i" : "h"));
         }
 
         fileWriter.close();
