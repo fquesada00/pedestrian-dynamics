@@ -27,9 +27,12 @@ public class Simulation {
     private final List<Zombie> zombies;
 
     public Simulation(double roomRadius, int totalHumans,
-                      double minPedestrianRadius, double maxPedestrianRadius, double humanDesiredSpeed, double zombieDesiredSpeed,
-                      double zombieInactiveSpeed,
-                      double beta, double tau, double initialDistanceToZombie, String dynamicOutputFileName, String staticOutputFileName, long seed) throws IOException {
+            double minPedestrianRadius, double maxPedestrianRadius, double humanDesiredSpeed, double zombieDesiredSpeed,
+            double zombieInactiveSpeed,
+            double beta, double tau, double initialDistanceToZombie, String dynamicOutputFileName,
+            String staticOutputFileName, long seed,
+            boolean randomizeZombieObstacleCoefficients, boolean randomizeHumanObstacleCoefficients,
+            boolean randomizeWallObstacleCoefficients) throws IOException {
         Zombie.setParameters(
                 zombieInactiveSpeed,
                 zombieDesiredSpeed,
@@ -55,7 +58,9 @@ public class Simulation {
                 0, 0));
 
         this.humans = generateInitialHumanPopulation(totalHumans, roomRadius, minPedestrianRadius,
-                maxPedestrianRadius, beta, tau, humanDesiredSpeed, initialDistanceToZombie, seed);
+                maxPedestrianRadius, beta, tau, humanDesiredSpeed, initialDistanceToZombie, seed,
+                randomizeZombieObstacleCoefficients, randomizeHumanObstacleCoefficients,
+                randomizeWallObstacleCoefficients);
 
     }
 
@@ -73,14 +78,58 @@ public class Simulation {
         int defaultDuration = 200;
         int duration = Integer.parseInt(System.getProperty("duration", Integer.toString(defaultDuration)));
 
-        long defaultSeed = 1;
+        long defaultSeed = -1;
         long seed = Long.parseLong(System.getProperty("seed", Long.toString(defaultSeed)));
 
         String dynamicOutputFileName = System.getProperty("dynamicOutputFileName", DEFAULT_DYNAMIC_OUTPUT_FILE_NAME);
         String staticOutputFileName = System.getProperty("staticOutputFileName", DEFAULT_STATIC_OUTPUT_FILE_NAME);
 
+        // zombie obstacle coefficients
+        double defaultZombieAp = ObstacleCoefficients.ZOMBIE.Ap;
+        double zombieAp = Double.parseDouble(System.getProperty("zombieAp", Double.toString(defaultZombieAp)));
+
+        double defaultZombieBp = ObstacleCoefficients.ZOMBIE.Bp;
+        double zombieBp = Double.parseDouble(System.getProperty("zombieBp", Double.toString(defaultZombieBp)));
+
+        // update zombie obstacle coefficients
+        ObstacleCoefficients.ZOMBIE.Ap = zombieAp;
+        ObstacleCoefficients.ZOMBIE.Bp = zombieBp;
+
+        // human obstacle coefficients
+        double defaultHumanAp = ObstacleCoefficients.HUMAN.Ap;
+        double humanAp = Double.parseDouble(System.getProperty("humanAp", Double.toString(defaultHumanAp)));
+
+        double defaultHumanBp = ObstacleCoefficients.HUMAN.Bp;
+        double humanBp = Double.parseDouble(System.getProperty("humanBp", Double.toString(defaultHumanBp)));
+
+        // update human obstacle coefficients
+        ObstacleCoefficients.HUMAN.Ap = humanAp;
+        ObstacleCoefficients.HUMAN.Bp = humanBp;
+
+        // wall obstacle coefficients
+        double defaultWallAp = ObstacleCoefficients.WALL.Ap;
+        double wallAp = Double.parseDouble(System.getProperty("wallAp", Double.toString(defaultWallAp)));
+
+        double defaultWallBp = ObstacleCoefficients.WALL.Bp;
+        double wallBp = Double.parseDouble(System.getProperty("wallBp", Double.toString(defaultWallBp)));
+
+        // update wall obstacle coefficients
+        ObstacleCoefficients.WALL.Ap = wallAp;
+        ObstacleCoefficients.WALL.Bp = wallBp;
+
+        // use random obstacles coefficients per entity
+        boolean randomizeZombieObstacleCoefficients = Boolean
+                .parseBoolean(System.getProperty("randZ", "false"));
+        boolean randomizeHumanObstacleCoefficients = Boolean
+                .parseBoolean(System.getProperty("randH", "false"));
+        boolean randomizeWallObstacleCoefficients = Boolean
+                .parseBoolean(System.getProperty("randW", "false"));
+
         Simulation simulation = new Simulation(
-                11, numberOfHumans, 0.1, 0.37, 4, zombieDesiredSpeed, 0.3, 0.9, 0.5, 1, dynamicOutputFileName, staticOutputFileName, seed);
+                11, numberOfHumans, 0.1, 0.37, 4, zombieDesiredSpeed, 0.3, 0.9, 0.5, 1, dynamicOutputFileName,
+                staticOutputFileName, seed,
+                randomizeZombieObstacleCoefficients, randomizeHumanObstacleCoefficients,
+                randomizeWallObstacleCoefficients);
 
         // double stepSize = simulation.computeOptimalStepSize(minRadius,
         // humanDesiredSpeed, zombieDesiredSpeed);
@@ -89,18 +138,50 @@ public class Simulation {
     }
 
     private List<Human> generateInitialHumanPopulation(int popSize, double roomRadius, double minPedestrianRadius,
-                                                       double maxPedestrianRadius,
-                                                       double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie, long seed) {
+            double maxPedestrianRadius,
+            double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie, long seed,
+            boolean randomizeZombieObstacleCoefficients, boolean randomizeHumanObstacleCoefficients,
+            boolean randomizeWallObstacleCoefficients) throws IOException {
         List<Human> humans = new ArrayList<>();
 
         Random random = new Random();
-        random.setSeed(seed);
+        if(seed != -1) {
+            random.setSeed(seed);
+        }
 
         while (humans.size() < popSize) {
             Vector2D humanPos = Vector2D.randomFromPolar(2 * minPedestrianRadius + initialDistanceToZombie,
                     roomRadius - minPedestrianRadius, 0, 2 * Math.PI, random);
-            Human newHuman = new Human(humanPos.x(), humanPos.y());
 
+            // zombie obstacle coefficients
+            double zombieAp = ObstacleCoefficients.ZOMBIE.Ap;
+            double zombieBp = ObstacleCoefficients.ZOMBIE.Bp;
+
+            if (randomizeZombieObstacleCoefficients) {
+                zombieAp = random.nextInt(1000, 3000);
+                zombieBp = random.nextDouble(0, 1);
+            }
+
+
+            // human obstacle coefficients
+            double humanAp = ObstacleCoefficients.HUMAN.Ap;
+            double humanBp = ObstacleCoefficients.HUMAN.Bp;
+
+            if (randomizeHumanObstacleCoefficients) {
+                humanAp = random.nextInt(500, 1000);
+                humanBp = random.nextDouble(0, 1);
+            }
+
+            // wall obstacle coefficients
+            double wallAp = ObstacleCoefficients.WALL.Ap;
+            double wallBp = ObstacleCoefficients.WALL.Bp;
+
+            if (randomizeWallObstacleCoefficients) {
+                wallAp = random.nextInt(100, 1500);
+                wallBp = random.nextDouble(0, 1);
+            }
+
+            Human newHuman = new Human(humanPos.x(), humanPos.y(), zombieAp, zombieBp, humanAp, humanBp, wallAp, wallBp);
             boolean overlaps = humans.stream().anyMatch(human -> human.overlaps(newHuman));
 
             if (!overlaps) {
@@ -238,6 +319,14 @@ public class Simulation {
                 }
             }
 
+            for (Human otherHuman : humans) {
+                if (zombie.equals(otherHuman))
+                    continue;
+                if (zombie.overlaps(otherHuman)) {
+                    collisionObstacles.add(otherHuman.getCurrentPosition());
+                }
+            }
+
             // for collisions
             if (collisionObstacles.size() > 0) {
                 zombie.setNextRadius(zombie.getMinRadius());
@@ -317,41 +406,51 @@ public class Simulation {
         return nearbyHumans;
     }
 
-    private Vector2D computeEludeVelocity(Pedestrian pedestrian) {
+    private Vector2D computeEludeVelocity(Human human) {
         Vector2D eludeDirection = new Vector2D(0, 0);
 
         // add zombies
-        List<Zombie> nearbyZombies = getNearbyZombies(zombies, pedestrian, HUMAN_SCAN_RADIUS);
+        List<Zombie> nearbyZombies = getNearbyZombies(zombies, human, HUMAN_SCAN_RADIUS);
         for (Zombie zombie : nearbyZombies) {
+
+            ObstacleCoefficients.ZOMBIE.Ap = human.getZombieAp();
+            ObstacleCoefficients.ZOMBIE.Bp = human.getZombieBp();
+
             eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                     ObstacleCoefficients.ZOMBIE,
-                    pedestrian.getCurrentPosition(),
+                    human.getCurrentPosition(),
                     zombie.getCurrentPosition()));
         }
 
         // add nearest wall
+        ObstacleCoefficients.WALL.Ap = human.getWallAp();
+        ObstacleCoefficients.WALL.Bp = human.getWallBp();
+
         eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                 ObstacleCoefficients.WALL,
-                pedestrian.getCurrentPosition(),
-                computeNearestWallPosition(pedestrian.getCurrentPosition())));
+                human.getCurrentPosition(),
+                computeNearestWallPosition(human.getCurrentPosition())));
 
         // add nearest humans
-        List<Human> nearbyHumans = getNearbyHumans(humans, pedestrian, HUMAN_SCAN_RADIUS);
-        for (Human human : nearbyHumans) {
-            if (human == pedestrian)
+        List<Human> nearbyHumans = getNearbyHumans(humans, human, HUMAN_SCAN_RADIUS);
+        for (Human otherHuman : nearbyHumans) {
+            if (otherHuman == human)
                 continue;
 
+            ObstacleCoefficients.HUMAN.Ap = human.getHumanAp();
+            ObstacleCoefficients.HUMAN.Bp = human.getHumanBp();
+            
             eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                     ObstacleCoefficients.HUMAN,
-                    pedestrian.getCurrentPosition(),
-                    human.getCurrentPosition()));
+                    human.getCurrentPosition(),
+                    otherHuman.getCurrentPosition()));
         }
 
-        return eludeDirection.normalize().scale(pedestrian.computeNextSpeed());
+        return eludeDirection.normalize().scale(human.computeNextSpeed());
     }
 
     private Vector2D computeEludeDirectionTerm(ObstacleCoefficients coefficients, Vector2D ownPosition,
-                                               Vector2D obstaclePosition) {
+            Vector2D obstaclePosition) {
         Vector2D direction = ownPosition.subtract(obstaclePosition);
         double dij = direction.length();
         Vector2D eij = direction.normalize();
