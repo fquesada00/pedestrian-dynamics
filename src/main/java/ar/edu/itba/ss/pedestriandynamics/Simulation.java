@@ -30,7 +30,7 @@ public class Simulation {
             double minPedestrianRadius, double maxPedestrianRadius, double humanDesiredSpeed, double zombieDesiredSpeed,
             double zombieInactiveSpeed,
             double beta, double tau, double initialDistanceToZombie, String dynamicOutputFileName,
-            String staticOutputFileName, long seed,
+            String staticOutputFileName, Random random,
             boolean randomizeZombieObstacleCoefficients, boolean randomizeHumanObstacleCoefficients,
             boolean randomizeWallObstacleCoefficients) throws IOException {
         Zombie.setParameters(
@@ -58,7 +58,7 @@ public class Simulation {
                 0, 0));
 
         this.humans = generateInitialHumanPopulation(totalHumans, roomRadius, minPedestrianRadius,
-                maxPedestrianRadius, beta, tau, humanDesiredSpeed, initialDistanceToZombie, seed,
+                maxPedestrianRadius, beta, tau, humanDesiredSpeed, initialDistanceToZombie, random,
                 randomizeZombieObstacleCoefficients, randomizeHumanObstacleCoefficients,
                 randomizeWallObstacleCoefficients);
 
@@ -125,29 +125,29 @@ public class Simulation {
         boolean randomizeWallObstacleCoefficients = Boolean
                 .parseBoolean(System.getProperty("randW", "false"));
 
+        Random random = new Random();
+        if (seed != -1) {
+            random.setSeed(seed);
+        }
+
         Simulation simulation = new Simulation(
                 11, numberOfHumans, 0.1, 0.37, 4, zombieDesiredSpeed, 0.3, 0.9, 0.5, 1, dynamicOutputFileName,
-                staticOutputFileName, seed,
+                staticOutputFileName, random,
                 randomizeZombieObstacleCoefficients, randomizeHumanObstacleCoefficients,
                 randomizeWallObstacleCoefficients);
 
         // double stepSize = simulation.computeOptimalStepSize(minRadius,
         // humanDesiredSpeed, zombieDesiredSpeed);
 
-        simulation.simulate(duration, stepSize);
+        simulation.simulate(duration, stepSize, random);
     }
 
     private List<Human> generateInitialHumanPopulation(int popSize, double roomRadius, double minPedestrianRadius,
             double maxPedestrianRadius,
-            double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie, long seed,
+            double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie, Random random,
             boolean randomizeZombieObstacleCoefficients, boolean randomizeHumanObstacleCoefficients,
             boolean randomizeWallObstacleCoefficients) throws IOException {
         List<Human> humans = new ArrayList<>();
-
-        Random random = new Random();
-        if(seed != -1) {
-            random.setSeed(seed);
-        }
 
         while (humans.size() < popSize) {
             Vector2D humanPos = Vector2D.randomFromPolar(2 * minPedestrianRadius + initialDistanceToZombie,
@@ -202,7 +202,7 @@ public class Simulation {
         fw.close();
     }
 
-    public void simulate(double duration, double stepSize) throws IOException {
+    public void simulate(double duration, double stepSize, Random random) throws IOException {
         int steps = (int) Math.floor(duration / stepSize);
         // clear file
         clearDynamicOutputFile();
@@ -227,7 +227,7 @@ public class Simulation {
             processHumansCollisions(stepSize);
 
             // calculate next target for every zombie
-            updateZombiesNextTargets();
+            updateZombiesNextTargets(random);
             //
             // TODO: Duda: es válido calcular esta velocidad de escape para zombies?
             // analyze collisions for zombies
@@ -341,9 +341,7 @@ public class Simulation {
         }
     }
 
-    private void updateZombiesNextTargets() {
-        Random random = new Random();
-
+    private void updateZombiesNextTargets(Random random) {
         for (Zombie zombie : zombies) {
             if (zombie.isInfecting()) {
                 continue;
