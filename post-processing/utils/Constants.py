@@ -9,3 +9,4 @@ class Constants(enum.Enum):
     DYNAMIC_FILE_NAME = "dynamic.txt"
     STATIC_FILE_NAME = "static.txt"
     ROOM_FILE_NAME = "room.xyz"
+    ANIMATION_FILE_NAME = "epidemic.xyz"

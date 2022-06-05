@@ -1,14 +1,15 @@
 import numpy as np
+from utils.Constants import Constants
 
 
 def generate_room():
-    with open("static.txt", "r") as f:
+    with open(Constants.STATIC_FILE_NAME, "r") as f:
         for index, line in enumerate(f):
             if index == 0:
                 room_radius = float(line.split()[0])
-    
-    with open("room.xyz", "w") as f:
-        particles = 100
+
+    with open(Constants.ROOM_FILE_NAME, "w") as f:
+        particles = 300
         f.write(f"{particles}\ncomment\n")
         angles = np.linspace(0, 2*np.pi, particles)
         for angle in angles:
@@ -16,8 +17,9 @@ def generate_room():
             y = room_radius * np.sin(angle)
             f.write("{0:.3f} {1:.3f}\n".format(x, y))
 
+
 def generate_animation():
-    with open("static.txt", "r") as f:
+    with open(Constants.STATIC_FILE_NAME, "r") as f:
         for index, line in enumerate(f):
             if index == 0:
                 room_radius = float(line.split()[0])
@@ -26,8 +28,8 @@ def generate_animation():
             elif index == 2:
                 zombies = int(line.split()[0])
 
-    with open("dynamic.txt", "r") as dynamic_file:
-        with open("epidemic.xyz", "w") as epidemic_file:
+    with open(Constants.DYNAMIC_FILE_NAME, "r") as dynamic_file:
+        with open(Constants.ANIMATION_FILE_NAME, "w") as epidemic_file:
             particles = humans + zombies
             for index, line in enumerate(dynamic_file):
                 line = line.split()
@@ -38,6 +40,7 @@ def generate_animation():
                     x = float(line.split()[0])
                     y = float(line.split()[1])
                     epidemic_file.write(f"{x} {y}\n")
+
 
 if __name__ == "__main__":
     generate_room()
