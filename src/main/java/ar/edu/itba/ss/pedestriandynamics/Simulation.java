@@ -76,7 +76,8 @@ public class Simulation {
         double stepSize = Double.parseDouble(System.getProperty("stepSize", Double.toString(defaultStepSize)));
 
         double defaultAnimationStep = 0.5;
-        double animationStep = Double.parseDouble(System.getProperty("animationStep", Double.toString(defaultAnimationStep)));
+        double animationStep = Double
+                .parseDouble(System.getProperty("animationStep", Double.toString(defaultAnimationStep)));
 
         int defaultDuration = 200;
         int duration = Integer.parseInt(System.getProperty("duration", Integer.toString(defaultDuration)));
@@ -165,7 +166,6 @@ public class Simulation {
                 zombieBp = random.nextDouble(0, 1);
             }
 
-
             // human obstacle coefficients
             double humanAp = ObstacleCoefficients.HUMAN.Ap;
             double humanBp = ObstacleCoefficients.HUMAN.Bp;
@@ -184,7 +184,8 @@ public class Simulation {
                 wallBp = random.nextDouble(0, 1);
             }
 
-            Human newHuman = new Human(humanPos.x(), humanPos.y(), zombieAp, zombieBp, humanAp, humanBp, wallAp, wallBp);
+            Human newHuman = new Human(humanPos.x(), humanPos.y(), zombieAp, zombieBp, humanAp, humanBp, wallAp,
+                    wallBp);
             boolean overlaps = humans.stream().anyMatch(human -> human.overlaps(newHuman));
 
             if (!overlaps) {
@@ -428,7 +429,9 @@ public class Simulation {
             eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                     ObstacleCoefficients.ZOMBIE,
                     human.getCurrentPosition(),
-                    zombie.getCurrentPosition()));
+                    zombie.getCurrentPosition(),
+                    human.getCurrentRadius(),
+                    zombie.getCurrentRadius()));
         }
 
         // add nearest wall
@@ -438,7 +441,7 @@ public class Simulation {
         eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                 ObstacleCoefficients.WALL,
                 human.getCurrentPosition(),
-                computeNearestWallPosition(human.getCurrentPosition())));
+                computeNearestWallPosition(human.getCurrentPosition()), human.getCurrentRadius(), 0));
 
         // add nearest humans
         List<Human> nearbyHumans = getNearbyHumans(humans, human, HUMAN_SCAN_RADIUS);
@@ -448,20 +451,20 @@ public class Simulation {
 
             ObstacleCoefficients.HUMAN.Ap = human.getHumanAp();
             ObstacleCoefficients.HUMAN.Bp = human.getHumanBp();
-            
+
             eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
                     ObstacleCoefficients.HUMAN,
                     human.getCurrentPosition(),
-                    otherHuman.getCurrentPosition()));
+                    otherHuman.getCurrentPosition(), human.getCurrentRadius(), otherHuman.getCurrentRadius()));
         }
 
         return eludeDirection.normalize().scale(human.computeNextSpeed());
     }
 
     private Vector2D computeEludeDirectionTerm(ObstacleCoefficients coefficients, Vector2D ownPosition,
-            Vector2D obstaclePosition) {
+            Vector2D obstaclePosition, double ownRadius, double obstacleRadius) {
         Vector2D direction = ownPosition.subtract(obstaclePosition);
-        double dij = direction.length();
+        double dij = direction.length() - (ownRadius + obstacleRadius);
         Vector2D eij = direction.normalize();
 
         return eij.scale(coefficients.Ap * Math.exp(-dij / coefficients.Bp));
