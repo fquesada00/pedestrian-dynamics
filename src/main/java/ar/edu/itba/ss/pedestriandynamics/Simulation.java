@@ -29,7 +29,7 @@ public class Simulation {
     public Simulation(double roomRadius, int totalHumans,
                       double minPedestrianRadius, double maxPedestrianRadius, double humanDesiredSpeed, double zombieDesiredSpeed,
                       double zombieInactiveSpeed,
-                      double beta, double tau, double initialDistanceToZombie, String dynamicOutputFileName, String staticOutputFileName) throws IOException {
+                      double beta, double tau, double initialDistanceToZombie, String dynamicOutputFileName, String staticOutputFileName, long seed) throws IOException {
         Zombie.setParameters(
                 zombieInactiveSpeed,
                 zombieDesiredSpeed,
@@ -55,7 +55,7 @@ public class Simulation {
                 0, 0));
 
         this.humans = generateInitialHumanPopulation(totalHumans, roomRadius, minPedestrianRadius,
-                maxPedestrianRadius, beta, tau, humanDesiredSpeed, initialDistanceToZombie);
+                maxPedestrianRadius, beta, tau, humanDesiredSpeed, initialDistanceToZombie, seed);
 
     }
 
@@ -64,7 +64,8 @@ public class Simulation {
         int numberOfHumans = Integer.parseInt(System.getProperty("nh", Integer.toString(defaultNumberOfHumans)));
 
         double defaultZombieDesiredSpeed = 3;
-        double zombieDesiredSpeed = Double.parseDouble(System.getProperty("vdz", Double.toString(defaultZombieDesiredSpeed)));
+        double zombieDesiredSpeed = Double
+                .parseDouble(System.getProperty("vdz", Double.toString(defaultZombieDesiredSpeed)));
 
         double defaultStepSize = 0.01;
         double stepSize = Double.parseDouble(System.getProperty("stepSize", Double.toString(defaultStepSize)));
@@ -72,11 +73,14 @@ public class Simulation {
         int defaultDuration = 200;
         int duration = Integer.parseInt(System.getProperty("duration", Integer.toString(defaultDuration)));
 
+        long defaultSeed = 1;
+        long seed = Long.parseLong(System.getProperty("seed", Long.toString(defaultSeed)));
+
         String dynamicOutputFileName = System.getProperty("dynamicOutputFileName", DEFAULT_DYNAMIC_OUTPUT_FILE_NAME);
         String staticOutputFileName = System.getProperty("staticOutputFileName", DEFAULT_STATIC_OUTPUT_FILE_NAME);
 
         Simulation simulation = new Simulation(
-                11, numberOfHumans, 0.1, 0.37, 4, zombieDesiredSpeed, 0.3, 0.9, 0.5, 1, dynamicOutputFileName, staticOutputFileName);
+                11, numberOfHumans, 0.1, 0.37, 4, zombieDesiredSpeed, 0.3, 0.9, 0.5, 1, dynamicOutputFileName, staticOutputFileName, seed);
 
         // double stepSize = simulation.computeOptimalStepSize(minRadius,
         // humanDesiredSpeed, zombieDesiredSpeed);
@@ -86,10 +90,11 @@ public class Simulation {
 
     private List<Human> generateInitialHumanPopulation(int popSize, double roomRadius, double minPedestrianRadius,
                                                        double maxPedestrianRadius,
-                                                       double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie) {
+                                                       double beta, double tau, double humanDesiredSpeed, double initialDistanceToZombie, long seed) {
         List<Human> humans = new ArrayList<>();
 
         Random random = new Random();
+        random.setSeed(seed);
 
         while (humans.size() < popSize) {
             Vector2D humanPos = Vector2D.randomFromPolar(2 * minPedestrianRadius + initialDistanceToZombie,
@@ -415,7 +420,7 @@ public class Simulation {
             // zombie.getCurrentPosition().x(), zombie.getCurrentPosition().y(),
             // ZOMBIE_SCAN_RADIUS));
             fileWriter.write(String.format("%f\t%f\t%f\t%s\n", zombie.getCurrentPosition().x(),
-                    zombie.getCurrentPosition().y(), zombie.getCurrentRadius(), zombie.isInfecting() ? "i" : "z"));
+                    zombie.getCurrentPosition().y(), zombie.getCurrentRadius(), "z"));
         }
         for (Human human : humans) {
             fileWriter.write(String.format("%f\t%f\t%f\t%s\n", human.getCurrentPosition().x(),
