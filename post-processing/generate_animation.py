@@ -4,7 +4,7 @@ from utils.get_static_parameters import get_static_parameters
 
 
 def generate_room():
-    with open(Constants.STATIC_FILE_NAME, "r") as f:
+    with open(Constants.STATIC_FILE_NAME.value, "r") as f:
         for index, line in enumerate(f):
             if index == 0:
                 room_radius = float(line.split()[0])
@@ -17,7 +17,7 @@ def generate_room():
         #     x = room_radius * np.cos(angle)
         #     y = room_radius * np.sin(angle)
         #     f.write("{0:.3f} {1:.3f}\n".format(x, y))
-        f.write(f"1\ncomment\n0 0 0 {room_radius}")
+        f.write(f"1\ncomment\n0 0 {room_radius}")
 
 
 
@@ -25,8 +25,8 @@ def generate_room():
 def generate_animation():
     room_radius, humans, zombies = get_static_parameters()
 
-    with open(Constants.DYNAMIC_FILE_NAME, "r") as dynamic_file:
-        with open(Constants.ANIMATION_FILE_NAME, "w") as epidemic_file:
+    with open(Constants.DYNAMIC_FILE_NAME.value, "r") as dynamic_file:
+        with open(Constants.ANIMATION_FILE_NAME.value, "w") as epidemic_file:
             particles = humans + zombies
             for index, line in enumerate(dynamic_file):
                 line = line.split()
@@ -45,7 +45,7 @@ def generate_animation():
                     else:
                         color = f"{255} {0} {0}"  # red
 
-                    epidemic_file.write(f"{x} {y} 15 {radius} {color}\n")
+                    epidemic_file.write(f"{x} {y} {radius} {color}\n")
 
 
 

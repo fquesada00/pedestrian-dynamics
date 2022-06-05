@@ -1,4 +1,4 @@
-from Constants import Constants
+from .Constants import Constants
 
 
 def get_static_parameters() -> tuple[float, int, int]:
@@ -9,7 +9,7 @@ def get_static_parameters() -> tuple[float, int, int]:
         - The number of humans.
         - The number of zombies.
     """
-    with open(Constants.STATIC_FILE_NAME, "r") as f:
+    with open(Constants.STATIC_FILE_NAME.value, "r") as f:
         for index, line in enumerate(f):
             if index == 0:
                 room_radius = float(line.split()[0])
