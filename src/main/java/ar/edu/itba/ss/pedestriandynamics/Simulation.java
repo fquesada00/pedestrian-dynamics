@@ -60,7 +60,8 @@ public class Simulation {
         int numberOfHumans = Integer.parseInt(System.getProperty("nh", Integer.toString(defaultNumberOfHumans)));
 
         double defaultZombieDesiredSpeed = 3;
-        double zombieDesiredSpeed = Double.parseDouble(System.getProperty("vdz", Double.toString(defaultZombieDesiredSpeed)));
+        double zombieDesiredSpeed = Double
+                .parseDouble(System.getProperty("vdz", Double.toString(defaultZombieDesiredSpeed)));
 
         double defaultStepSize = 0.01;
         double stepSize = Double.parseDouble(System.getProperty("stepSize", Double.toString(defaultStepSize)));
@@ -408,7 +409,7 @@ public class Simulation {
             // zombie.getCurrentPosition().x(), zombie.getCurrentPosition().y(),
             // ZOMBIE_SCAN_RADIUS));
             fileWriter.write(String.format("%f\t%f\t%f\t%s\n", zombie.getCurrentPosition().x(),
-                    zombie.getCurrentPosition().y(), zombie.getCurrentRadius(), zombie.isInfecting() ? "i" : "z"));
+                    zombie.getCurrentPosition().y(), zombie.getCurrentRadius(), "z"));
         }
         for (Human human : humans) {
             fileWriter.write(String.format("%f\t%f\t%f\t%s\n", human.getCurrentPosition().x(),

@@ -6,7 +6,7 @@ public record Vector2D(double x, double y) {
     public static Vector2D randomFromPolar(double lowerRadius, double upperRadius, double lowerAngle, double upperAngle, Random random) {
         double angle = random.nextDouble(lowerAngle, upperAngle);
         double radius = random.nextDouble(lowerRadius, upperRadius);
-
+        
         double x = radius * Math.cos(angle);
         double y = radius * Math.sin(angle);
 
