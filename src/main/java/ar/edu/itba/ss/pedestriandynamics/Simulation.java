@@ -75,6 +75,9 @@ public class Simulation {
         double defaultStepSize = 0.01;
         double stepSize = Double.parseDouble(System.getProperty("stepSize", Double.toString(defaultStepSize)));
 
+        double defaultAnimationStep = 0.5;
+        double animationStep = Double.parseDouble(System.getProperty("animationStep", Double.toString(defaultAnimationStep)));
+
         int defaultDuration = 200;
         int duration = Integer.parseInt(System.getProperty("duration", Integer.toString(defaultDuration)));
 
@@ -139,7 +142,7 @@ public class Simulation {
         // double stepSize = simulation.computeOptimalStepSize(minRadius,
         // humanDesiredSpeed, zombieDesiredSpeed);
 
-        simulation.simulate(duration, stepSize, random);
+        simulation.simulate(duration, stepSize, random, animationStep);
     }
 
     private List<Human> generateInitialHumanPopulation(int popSize, double roomRadius, double minPedestrianRadius,
@@ -202,14 +205,20 @@ public class Simulation {
         fw.close();
     }
 
-    public void simulate(double duration, double stepSize, Random random) throws IOException {
+    public void simulate(double duration, double stepSize, Random random, double animationStep) throws IOException {
         int steps = (int) Math.floor(duration / stepSize);
+        int skipSteps = (int) Math.floor(animationStep / stepSize);
+
         // clear file
         clearDynamicOutputFile();
         printStaticParameters();
 
-        for (int i = 0; i < steps && humans.size() > 0; i++) {
-            printSimulationStep(i);
+        int i;
+        for (i = 0; i < steps && humans.size() > 0; i++) {
+            if (i % skipSteps == 0) {
+                printSimulationStep(i);
+            }
+
             // convert humans to zombies
             List<Zombie> newZombies = humans.stream().filter(Human::transitionToZombie).map(Zombie::fromHuman)
                     .collect(Collectors.toList());
@@ -239,7 +248,9 @@ public class Simulation {
             updatePedestrianPositions(stepSize);
         }
 
-        printSimulationStep(steps);
+        if (i % skipSteps == 0) {
+            printSimulationStep(i);
+        }
 
         System.out.println("Humans: " + humans.size());
     }
