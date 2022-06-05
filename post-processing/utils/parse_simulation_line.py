@@ -1,4 +1,4 @@
-def parse_simulation_line(line: str) -> tuple[float, float, float, int, int, int]:
+def parse_simulation_line(line: str):
     """
     Parse a line from a simulation file.
     :param line: The line to parse.
