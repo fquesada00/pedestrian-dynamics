@@ -1,8 +1,10 @@
 import numpy as np
+from utils.Constants import Constants
+from utils.get_static_parameters import get_static_parameters
 
 
 def generate_room():
-    with open("static.txt", "r") as f:
+    with open(Constants.STATIC_FILE_NAME, "r") as f:
         for index, line in enumerate(f):
             if index == 0:
                 room_radius = float(line.split()[0])
@@ -19,18 +21,12 @@ def generate_room():
 
 
 
-def generate_animation():
-    with open("static.txt", "r") as f:
-        for index, line in enumerate(f):
-            if index == 0:
-                room_radius = float(line.split()[0])
-            elif index == 1:
-                humans = int(line.split()[0])
-            elif index == 2:
-                zombies = int(line.split()[0])
 
-    with open("dynamic.txt", "r") as dynamic_file:
-        with open("epidemic.xyz", "w") as epidemic_file:
+def generate_animation():
+    room_radius, humans, zombies = get_static_parameters()
+
+    with open(Constants.DYNAMIC_FILE_NAME, "r") as dynamic_file:
+        with open(Constants.ANIMATION_FILE_NAME, "w") as epidemic_file:
             particles = humans + zombies
             for index, line in enumerate(dynamic_file):
                 line = line.split()
@@ -50,6 +46,7 @@ def generate_animation():
                         color = f"{255} {0} {0}"  # red
 
                     epidemic_file.write(f"{x} {y} 15 {radius} {color}\n")
+
 
 
 if __name__ == "__main__":
