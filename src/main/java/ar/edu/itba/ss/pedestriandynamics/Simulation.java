@@ -18,7 +18,8 @@ public class Simulation {
 
     private final static double ZOMBIE_SCAN_RADIUS = 4;
     private final static double HUMAN_SCAN_RADIUS = 4;
-    private static final String OUTPUT_FILE_NAME = "dynamic.txt";
+    private static final String DYNAMIC_OUTPUT_FILE_NAME = "dynamic.txt";
+    private static final String STATIC_OUTPUT_FILE_NAME = "static.txt";
     private final double roomRadius;
     private final List<Human> humans;
     private final List<Zombie> zombies;
@@ -61,7 +62,7 @@ public class Simulation {
         double zombieDesiredSpeed = 0.37;
 
         Simulation simulation = new Simulation(
-                11, 100, 0.1, 0.37, 4, 3, 0.3, 0.9, 0.5, 1
+                11, 150, 0.1, 0.37, 4, 3, 0.3, 0.9, 0.5, 1
         );
 
 //        double stepSize = simulation.computeOptimalStepSize(minRadius, humanDesiredSpeed, zombieDesiredSpeed);
@@ -94,8 +95,8 @@ public class Simulation {
         return 0.5 * minRadius / Math.max(humanDesiredSpeed, zombieDesiredSpeed);
     }
 
-    private void clearOutputFile() throws IOException {
-        FileWriter fw = new FileWriter(OUTPUT_FILE_NAME);
+    private void clearDynamicOutputFile() throws IOException {
+        FileWriter fw = new FileWriter(DYNAMIC_OUTPUT_FILE_NAME);
         fw.write("");
         fw.close();
     }
@@ -103,7 +104,8 @@ public class Simulation {
     public void simulate(double duration, double stepSize) throws IOException {
         int steps = (int) Math.floor(duration / stepSize);
         // clear file
-        clearOutputFile();
+        clearDynamicOutputFile();
+        printStaticParameters();
 
         for (int i = 0; i < steps && humans.size() > 0; i++) {
             printSimulationStep(i);
@@ -375,8 +377,16 @@ public class Simulation {
         });
     }
 
+    private void printStaticParameters() throws IOException {
+        FileWriter fileWriter = new FileWriter(Simulation.STATIC_OUTPUT_FILE_NAME, false);
+
+        fileWriter.write(String.format("%f\n%d\n%d\n", roomRadius, humans.size(), zombies.size()));
+
+        fileWriter.close();
+    }
+
     private void printSimulationStep(int stepNumber) throws IOException {
-        FileWriter fileWriter = new FileWriter(Simulation.OUTPUT_FILE_NAME, true);
+        FileWriter fileWriter = new FileWriter(Simulation.DYNAMIC_OUTPUT_FILE_NAME, true);
 
         fileWriter.write(String.format("%d\ncomment\n", humans.size() + zombies.size()));
 
