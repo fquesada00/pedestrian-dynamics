@@ -4,6 +4,8 @@ import numpy as np
 from utils.parse_simulation_line import parse_simulation_line
 from utils.runner import run_simulation
 from utils.Constants import Constants
+from utils.export_plot_data_to_csv import export_plot_data_to_csv
+from utils.parse_csv_plot_data import parse_csv_plot_data
 
 
 def calculate_fraction(dynamic_filename, n_particles):
@@ -27,8 +29,7 @@ def calculate_fraction(dynamic_filename, n_particles):
     return fraction
 
 
-def plot_fraction(fractions, nh, dt, color="red"):
-    fractions = np.array(fractions)
+def plot_avg_fraction(dts, avg_fractions, stdev_fractions, nh, color="red"):
     print(f"Plotting fraction for nh={nh} and dt={dt}")
     plt.tight_layout()
 
@@ -37,6 +38,13 @@ def plot_fraction(fractions, nh, dt, color="red"):
 
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
+    plt.errorbar(dts, avg_fractions, yerr=stdev_fractions,
+                 ecolor="blue", marker="o", color=color, elinewidth=0.5, capsize=5, label=f"$N_h = {nh}$")
+
+
+def calculate_avg_fraction(fractions, dt, color="red"):
+    fractions = np.array(fractions)
+
     avg_fractions = []
     stdev_fractions = []
     for step_values in zip_longest(*fractions, fillvalue=np.nan):
@@ -48,8 +56,46 @@ def plot_fraction(fractions, nh, dt, color="red"):
             stdev_fractions, new_stdev)
 
     dts = np.arange(0, len(avg_fractions)) * dt
-    plt.errorbar(dts, avg_fractions, yerr=stdev_fractions,
-                 ecolor="blue", marker="o", color=color, elinewidth=0.5, capsize=5, label=f"$N_h = {nh}$")
+
+    return dts, avg_fractions, stdev_fractions
+
+
+def plot(nha, colors, num_of_iterations, dt, duration, vdz, dt2, from_csv=False):
+
+    if not from_csv:
+        avg_list = []
+        stdev_list = []
+        time = np.arange(0, duration + dt2, dt2)
+
+        for index, nh in enumerate(nhs):
+            fractions = []
+            for i in range(num_of_iterations):
+                run_simulation(nh, vdz=vdz, duration=duration, step_size=dt, seed=i,
+                               random_z_coefficient=True, random_h_coefficient=True, random_w_coefficient=True, animation_step=dt2)
+                fractions.append(calculate_fraction(
+                    Constants.DYNAMIC_FILE_NAME.value, nh+1))
+            dts, avg_fraction, stdev_fraction = calculate_avg_fraction(
+                fractions, dt, color=colors[index])
+            avg_list.append(avg_fraction)
+            stdev_list.append(stdev_fraction)
+
+        export_plot_data_to_csv(
+            time, avg_list, stdev_list, Constants.FRACTION_FILE_NAME.value)
+
+    else:
+        time, avg_list, stdev_list = parse_csv_plot_data(
+            Constants.FRACTION_FILE_NAME.value, len(nhs))
+        pass
+
+    for index, nh in enumerate(nhs):
+        dts = time[0:len(avg_list[index])]
+        avg_fraction = avg_list[index]
+        stdev_fraction = stdev_list[index]
+        plot_avg_fraction(dts, avg_fraction, stdev_fraction,
+                          nh, color=colors[index])
+
+    plt.legend(fontsize=13)
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -62,16 +108,5 @@ if __name__ == "__main__":
     duration = 500
     vdz = 3
     dt2 = 5
-    for index, nh in enumerate(nhs):
-        fractions = []
-
-        for i in range(num_of_iterations):
-            run_simulation(nh, vdz=vdz, duration=duration, step_size=dt, seed=i,
-                           random_z_coefficient=True, random_h_coefficient=True, random_w_coefficient=True, animation_step=dt2)
-            fractions.append(calculate_fraction(
-                Constants.DYNAMIC_FILE_NAME.value, nh+1))
-
-        plot_fraction(fractions, nh, dt2, color=colors[index])
-
-    plt.legend(fontsize=13)
-    plt.show()
+    plot(nhs, colors, num_of_iterations, dt,
+         duration, vdz, dt2, from_csv=True)
