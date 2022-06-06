@@ -438,10 +438,14 @@ public class Simulation {
         ObstacleCoefficients.WALL.Ap = human.getWallAp();
         ObstacleCoefficients.WALL.Bp = human.getWallBp();
 
-        eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
-                ObstacleCoefficients.WALL,
-                human.getCurrentPosition(),
-                computeNearestWallPosition(human.getCurrentPosition()), human.getCurrentRadius(), 0));
+        Vector2D nearestWall = computeNearestWallPosition(human.getCurrentPosition());
+        if(human.distance(nearestWall,0) <= HUMAN_SCAN_RADIUS){
+            eludeDirection = eludeDirection.add(computeEludeDirectionTerm(
+                    ObstacleCoefficients.WALL,
+                    human.getCurrentPosition(),
+                    nearestWall, human.getCurrentRadius(), 0));
+
+        }
 
         // add nearest humans
         List<Human> nearbyHumans = getNearbyHumans(humans, human, HUMAN_SCAN_RADIUS);
