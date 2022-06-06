@@ -32,7 +32,7 @@ def get_infection_rate_evolution(nh, vdz, duration, step_size, animation_step, s
             # skip the first line of the step
             if len(line.split()) == 1:
                 infection_rates.append(compute_infection_rate(
-                    previous_zombie_count, current_zombie_count, step_size))
+                    previous_zombie_count, current_zombie_count, animation_step))
 
                 # update the previous zombie count
                 previous_zombie_count = current_zombie_count
@@ -95,7 +95,7 @@ def plot_ej_c_infection_rate(vdz_list, nh, duration, step_size, animation_step, 
         dts = time[0:len(avg_list[i])]
 
         ax1.errorbar(dts, avg_list[i], yerr=stdev_list[i],
-                     ecolor=colors[i % len(colors)], marker="o", color=colors[i % len(colors)], elinewidth=0.5, capsize=5, label=f"$v_{{dz}} = {vdz}$")
+                     ecolor=colors[i % len(colors)], marker="o", color=colors[i % len(colors)], elinewidth=0.5, capsize=5, label=f"$v_{{dz}} = {vdz}$ m/s")
 
         if with_gaussian_filter:
             sigma = 3
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     animation_step = 10
     duration = 250
     vdz = 3
-    nh = 200
+    nh = 140
 
     # plot_ej_b_infection_rate(nh_list, vdz, duration, step_size,
     #                          animation_step, executions=5, with_gaussian_filter=True, restore_plot_data=False)
