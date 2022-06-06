@@ -50,18 +50,81 @@ def get_infection_rate_evolution(nh, vdz, duration, step_size, animation_step, s
     return infection_rates
 
 
-def plot_ej_b_infection_rate(nh_list, vdz, duration, step_size, animation_step, executions, with_gaussian_filter=True, restore_plot_data=False):
-    plt.figure(figsize=(10, 5))
-
+def plot_ej_c_infection_rate(vdz_list, nh, duration, step_size, animation_step, executions, with_gaussian_filter=True, restore_plot_data=False, plot_data_file_name: str = Constants.INFECTION_RATE_FILE_NAME_VDZ.value):
     fig1, ax1 = plt.subplots()
     fig2, ax2 = plt.subplots()
     # plt.title("Velocidad de contagio e")
 
-    ax1.set_ylabel("Velocidad de contagio [1/s]")
-    ax1.set_xlabel("Tiempo [s]")
+    ax1.set_ylabel("Velocidad de contagio [1/s]", fontsize=20)
+    ax1.set_xlabel("Tiempo [s]", fontsize=20)
+    ax1.tick_params(axis='both', labelsize=15)
 
-    ax2.set_ylabel("Velocidad de contagio [1/s]")
-    ax2.set_xlabel("Tiempo [s]")
+    # set axis font size to 13
+
+    ax2.set_ylabel("Velocidad de contagio [1/s]", fontsize=20)
+    ax2.set_xlabel("Tiempo [s]", fontsize=20)
+    ax2.tick_params(axis='both', labelsize=15)
+
+    colors = ["#332288", "#88CCEE", "#44AA99", "#117733",
+              "#999933", "#DDCC77", "#CC6677", "#882255", "#AA4499"]
+
+    avg_list = []
+    stdev_list = []
+    time = np.arange(0, duration + animation_step, animation_step)
+
+    if not restore_plot_data:
+        for i, vdz in enumerate(vdz_list):
+            infection_rate_evolutions = []
+
+            for j in range(executions):
+                infection_rate_evolutions.append(get_infection_rate_evolution(
+                    nh, vdz, duration, step_size, animation_step, seed=j))
+
+            avg, stdev = get_irregular_mean_and_std(
+                infection_rate_evolutions)
+
+            avg_list.append(avg)
+            stdev_list.append(stdev)
+
+    else:
+        time, avg_list, stdev_list = parse_csv_plot_data(
+            plot_data_file_name, len(vdz_list)
+        )
+
+    for i, vdz in enumerate(vdz_list):
+        dts = time[0:len(avg_list[i])]
+
+        ax1.errorbar(dts, avg_list[i], yerr=stdev_list[i],
+                     ecolor=colors[i % len(colors)], marker="o", color=colors[i % len(colors)], elinewidth=0.5, capsize=5, label=f"$v_{{dz}} = {vdz}$")
+
+        if with_gaussian_filter:
+            sigma = 3
+
+            ax2.plot(dts, gaussian_filter(avg_list[i], sigma),
+                     marker="o", color=colors[i % len(colors)], label=f"$v_{{dz}} = {vdz}$")
+
+    export_plot_data_to_csv(time, avg_list, stdev_list,
+                            plot_data_file_name)
+
+    fig1.legend(fontsize=13)
+    fig2.legend(fontsize=13)
+    plt.show()
+
+
+def plot_ej_b_infection_rate(nh_list, vdz, duration, step_size, animation_step, executions, with_gaussian_filter=True, restore_plot_data=False, plot_data_file_name: str = Constants.INFECTION_RATE_FILE_NAME_NH.value):
+    fig1, ax1 = plt.subplots()
+    fig2, ax2 = plt.subplots()
+    # plt.title("Velocidad de contagio e")
+
+    ax1.set_ylabel("Velocidad de contagio [1/s]", fontsize=20)
+    ax1.set_xlabel("Tiempo [s]", fontsize=20)
+    ax1.tick_params(axis='both', labelsize=15)
+
+    # set axis font size to 13
+
+    ax2.set_ylabel("Velocidad de contagio [1/s]", fontsize=20)
+    ax2.set_xlabel("Tiempo [s]", fontsize=20)
+    ax2.tick_params(axis='both', labelsize=15)
 
     colors = ["#332288", "#88CCEE", "#44AA99", "#117733",
               "#999933", "#DDCC77", "#CC6677", "#882255", "#AA4499"]
@@ -86,14 +149,14 @@ def plot_ej_b_infection_rate(nh_list, vdz, duration, step_size, animation_step, 
 
     else:
         time, avg_list, stdev_list = parse_csv_plot_data(
-            Constants.INFECTION_RATE_FILE_NAME.value, len(nh_list)
+            plot_data_file_name, len(nh_list)
         )
 
     for i, nh in enumerate(nh_list):
         dts = time[0:len(avg_list[i])]
 
         ax1.errorbar(dts, avg_list[i], yerr=stdev_list[i],
-                     ecolor="blue", marker="o", color=colors[i % len(colors)], elinewidth=0.5, capsize=5, label=f"NH = {nh}")
+                     ecolor=colors[i % len(colors)], marker="o", color=colors[i % len(colors)], elinewidth=0.5, capsize=5, label=f"$N_h = {nh}$")
 
         if with_gaussian_filter:
             sigma = 3
@@ -102,20 +165,26 @@ def plot_ej_b_infection_rate(nh_list, vdz, duration, step_size, animation_step, 
                      marker="o", color=colors[i % len(colors)], label=f"$N_h = {nh}$")
 
     export_plot_data_to_csv(time, avg_list, stdev_list,
-                            Constants.INFECTION_RATE_FILE_NAME.value)
+                            plot_data_file_name)
 
-    fig1.legend()
-    fig2.legend()
+    fig1.legend(fontsize=13)
+    fig2.legend(fontsize=13)
     plt.show()
 
 
 if __name__ == "__main__":
-    nh_list = [2, 10, 40, 80]
+    nh_list = [2, 10, 40, 80, 140, 200, 260, 320, 380]
+    vdz_list = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
+    # nh_list = [2, 10, 40]
     step_size = 0.01
     animation_step = 10
-    duration = 200
+    duration = 250
     vdz = 3
+    nh = 200
 
-    plot_ej_b_infection_rate(nh_list, vdz, duration, step_size,
-                             animation_step, executions=5, with_gaussian_filter=True, restore_plot_data=True)
+    # plot_ej_b_infection_rate(nh_list, vdz, duration, step_size,
+    #                          animation_step, executions=5, with_gaussian_filter=True, restore_plot_data=False)
+
+    plot_ej_c_infection_rate(vdz_list, nh, duration, step_size,
+                             animation_step, executions=5, with_gaussian_filter=True, restore_plot_data=False)
     # initialize plot

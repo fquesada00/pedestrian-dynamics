@@ -11,4 +11,6 @@ class Constants(enum.Enum):
     ROOM_FILE_NAME = "room.xyz"
     ANIMATION_FILE_NAME = "epidemic.xyz"
     INFECTION_RATE_FILE_NAME = "ej_b_infection_rate.csv"
-    FRACTION_FILE_NAME = "ej_a_fraction.csv"
+    FRACTION_FILE_NAME_NH = "ej_a_fraction.csv"
+    INFECTION_RATE_FILE_NAME_NH = "ej_b_infection_rate.csv"
+    INFECTION_RATE_FILE_NAME_VDZ = "ej_c_infection_rate.csv"
