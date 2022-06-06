@@ -81,7 +81,7 @@ def plot_ej_c_infection_rate(vdz_list, nh, duration, step_size, animation_step, 
                     nh, vdz, duration, step_size, animation_step, seed=j))
 
             avg, stdev = get_irregular_mean_and_std(
-                infection_rate_evolutions)
+                infection_rate_evolutions, np.nan)
 
             avg_list.append(avg)
             stdev_list.append(stdev)
@@ -142,7 +142,7 @@ def plot_ej_b_infection_rate(nh_list, vdz, duration, step_size, animation_step, 
                     nh, vdz, duration, step_size, animation_step, seed=j))
 
             avg, stdev = get_irregular_mean_and_std(
-                infection_rate_evolutions)
+                infection_rate_evolutions, np.nan)
 
             avg_list.append(avg)
             stdev_list.append(stdev)

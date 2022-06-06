@@ -10,16 +10,8 @@ def generate_room():
                 room_radius = float(line.split()[0])
 
     with open("room.xyz", "w") as f:
-        # particles = 300
-        # f.write(f"{particles}\ncomment\n")
-        # angles = np.linspace(0, 2*np.pi, particles)
-        # for angle in angles:
-        #     x = room_radius * np.cos(angle)
-        #     y = room_radius * np.sin(angle)
-        #     f.write("{0:.3f} {1:.3f}\n".format(x, y))
-        f.write(f"1\ncomment\n0 0 {room_radius}")
-
-
+        f.write(f"2\ncomment\n0 0 1 {room_radius+0.25} 0 0 0\n")
+        f.write(f"0 0 0 {room_radius} 255 255 255")
 
 
 def generate_animation():
@@ -35,6 +27,7 @@ def generate_animation():
                 else:
                     x = float(line[0])
                     y = float(line[1])
+                    z = -5
                     radius = float(line[2])
                     pedestrian = line[3]
 
@@ -45,8 +38,7 @@ def generate_animation():
                     else:
                         color = f"{255} {0} {0}"  # red
 
-                    epidemic_file.write(f"{x} {y} {radius} {color}\n")
-
+                    epidemic_file.write(f"{x} {y} {z} {radius} {color}\n")
 
 
 if __name__ == "__main__":

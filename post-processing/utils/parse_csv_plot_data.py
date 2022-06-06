@@ -12,11 +12,6 @@ def parse_csv_plot_data(file_name, columns):
         avg_list.append(data.iloc[:, i + 1].values)
         stdev_list.append(data.iloc[:, i + 1 + columns].values)
 
-    # filter np.nan values from stdev and avg
-    for i in range(len(avg_list)):
-        avg_list[i] = [x for x in avg_list[i] if str(x) != 'nan']
-        stdev_list[i] = [x for x in stdev_list[i] if str(x) != 'nan']
-
     return time, avg_list, stdev_list
     # with open(file_name, 'r') as f:
     #     lines = f.readlines()

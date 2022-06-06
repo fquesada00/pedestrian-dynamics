@@ -15,7 +15,8 @@ def run_simulation(nh: int = 200, vdz: float = 3, seed: int = 1, duration: int =
 
 
 def main():
-    run_simulation()
+    run_simulation(nh=320, seed=1442, step_size=0.01,
+                   animation_step=0.1, duration=500, vdz=5)
 
 
 if __name__ == "__main__":
